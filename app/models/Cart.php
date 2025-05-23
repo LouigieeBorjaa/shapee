@@ -1,15 +1,14 @@
 <?php
 namespace Aries\MiniFrameworkStore\Models;
 
-require_once __DIR__ . '/../includes/database.php';
-
 use Aries\MiniFrameworkStore\Includes\Database;
 
-class Cart {
+class Cart extends Database {
     private $db;
 
     public function __construct() {
-        $this->db = new Database();
+        parent::__construct(); // Call the parent constructor to establish the connection
+        $this->db = $this->getConnection(); // Get the connection instance
     }
 
     public function addToCart($userId, $productId, $quantity = 1) {
@@ -22,13 +21,13 @@ class Cart {
         }
 
         $sql = "INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         return $stmt->execute([$userId, $productId, $quantity]);
     }
 
     public function removeFromCart($userId, $productId) {
         $sql = "DELETE FROM cart WHERE user_id = ? AND product_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         return $stmt->execute([$userId, $productId]);
     }
 
@@ -38,13 +37,13 @@ class Cart {
         }
 
         $sql = "UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         return $stmt->execute([$quantity, $userId, $productId]);
     }
 
     public function getCartItem($userId, $productId) {
         $sql = "SELECT * FROM cart WHERE user_id = ? AND product_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId, $productId]);
         return $stmt->fetch();
     }
@@ -54,7 +53,7 @@ class Cart {
                 FROM cart c 
                 JOIN products p ON c.product_id = p.id 
                 WHERE c.user_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
@@ -64,7 +63,7 @@ class Cart {
                 FROM cart c 
                 JOIN products p ON c.product_id = p.id 
                 WHERE c.user_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId]);
         $result = $stmt->fetch();
         return $result['total'] ?? 0;
@@ -72,13 +71,13 @@ class Cart {
 
     public function clearCart($userId) {
         $sql = "DELETE FROM cart WHERE user_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         return $stmt->execute([$userId]);
     }
 
     public function countCartItems($userId) {
         $sql = "SELECT COUNT(*) as count FROM cart WHERE user_id = ?";
-        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$userId]);
         $result = $stmt->fetch();
         return $result['count'] ?? 0;

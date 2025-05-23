@@ -52,5 +52,53 @@ class User extends Database {
         $stmt->execute([
             'id' => $id
         ]);
-    }   
+    }
+
+    public function getUserById($userId) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        return $stmt->fetch();
+    }
+
+    public function getUserByEmail($email) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch();
+    }
+
+    public function createUser($name, $email, $password) {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare("
+            INSERT INTO users (name, email, password, created_at)
+            VALUES (?, ?, ?, NOW())
+        ");
+        return $stmt->execute([$name, $email, $hashedPassword]);
+    }
+
+    public function updateUser($userId, $name, $email) {
+        $stmt = $this->db->prepare("
+            UPDATE users 
+            SET name = ?, email = ?, updated_at = NOW()
+            WHERE id = ?
+        ");
+        return $stmt->execute([$name, $email, $userId]);
+    }
+
+    public function updatePassword($userId, $newPassword) {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare("
+            UPDATE users 
+            SET password = ?, updated_at = NOW()
+            WHERE id = ?
+        ");
+        return $stmt->execute([$hashedPassword, $userId]);
+    }
+
+    public function verifyPassword($email, $password) {
+        $user = $this->getUserByEmail($email);
+        if ($user && password_verify($password, $user['password'])) {
+            return $user;
+        }
+        return false;
+    }
 }
